@@ -1,4 +1,4 @@
 credentials.yml
 !.gitkeep
 *.md
-*.DS_Store
+.DS_Store
