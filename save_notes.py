@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 import google.generativeai as genai
 import yaml
 from google.ai.generativelanguage_v1beta.types import content
-from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api import NoTranscriptFound, YouTubeTranscriptApi
 from yt_dlp import YoutubeDL
 
 
@@ -166,20 +166,37 @@ def enrich_video_data(video_data: dict, models: tuple, logger: logging.Logger) -
     max_minutes_for_transcript = 15
     try:
         logger.info("| Getting transcript")
-        transcript = YouTubeTranscriptApi.get_transcript(video_data["id"])
+        transcript = YouTubeTranscriptApi.get_transcript(
+            video_data["id"], languages=["en", "es"]
+        )
+    except NoTranscriptFound:
+        logger.error("Error getting transcript: No transcript found")
+        video_data["transcript"] = ""
+        video_data["new_transcript"] = ""
+    except Exception as e:
+        logger.error("Error getting transcript: %s", e)
+        video_data["transcript"] = ""
+        video_data["new_transcript"] = ""
+
+    if transcript:
         transcript_text = "\n".join(
             [f"{fmt_time(entry['start'])} {entry['text']}" for entry in transcript]
         )
         video_data["transcript"] = transcript_text
-    except Exception as e:
-        logger.error("Error getting transcript: %s", e)
-        video_data["transcript"] = None
-    else:
         if video_data["duration"] < max_minutes_for_transcript:
             logger.info("| Processing transcript with LLM")
-            chat_session = transcript_model.start_chat(history=[])
-            new_transcript_text = chat_session.send_message(transcript_text).text
-            video_data["new_transcript"] = new_transcript_text
+            try:
+                chat_session = transcript_model.start_chat(history=[])
+                new_transcript_text = chat_session.send_message(transcript_text).text
+                video_data["new_transcript"] = new_transcript_text
+            except Exception as e:
+                logger.error("Error processing transcript: %s", e)
+                video_data["new_transcript"] = transcript_text
+
+                logger.info("Sleeping for 5 seconds")
+                for i in range(5):
+                    print(5 - i, end=" ", flush=True)
+                    time.sleep(1)
         else:
             video_data["new_transcript"] = transcript_text
 
@@ -198,6 +215,11 @@ def enrich_video_data(video_data: dict, models: tuple, logger: logging.Logger) -
         video_data["summary"] = video_data["description"]
         video_data["key_takeaways"] = ""
         video_data["tags"] = []
+
+        logger.info("Sleeping for 10 seconds")
+        for i in range(10):
+            print(10 - i, end=" ", flush=True)
+            time.sleep(1)
 
     return video_data
 
@@ -281,7 +303,7 @@ def main() -> None:
         note_path = save_note(video_data)
         logger.info("| Saved note to %s", note_path)
 
-        time.sleep(5)
+        time.sleep(3)
 
 
 if __name__ == "__main__":
