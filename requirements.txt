@@ -1,4 +1,3 @@
-pandas
 google-generativeai
 yt-dlp
 youtube-transcript-api
