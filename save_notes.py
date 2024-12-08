@@ -13,10 +13,13 @@ from google.ai.generativelanguage_v1beta.types import content
 from youtube_transcript_api import YouTubeTranscriptApi
 from yt_dlp import YoutubeDL
 
-logging.basicConfig(
-    level=logging.INFO, format="%(levelname)s %(asctime)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+
+def get_logger() -> logging.Logger:
+    """Get a logger."""
+    log_fmt = "%(levelname)s %(asctime)s - %(message)s"
+    date_fmt = "%Y-%m-%d %H:%M:%S"
+    logging.basicConfig(level=logging.INFO, format=log_fmt, datefmt=date_fmt)
+    return logging.getLogger(__name__)
 
 
 def fmt_time(seconds: int) -> str:
@@ -26,19 +29,21 @@ def fmt_time(seconds: int) -> str:
 
 def get_note_title(video_title: str) -> str:
     """Get a valid note title from a video title."""
-    # Remove special characters including dots and slashes, and emojis
     note_title = re.sub(r"[^\w\s']", "", video_title).capitalize()
     return note_title + ".md"
 
 
 def get_video_links() -> list:
     """Get video links from a txt file."""
-    with open("input/test.txt", "r") as f:
+    with open("input/videos.txt", "r") as f:
         video_links = f.readlines()
 
     # Extract URLs from each line
     pat = re.compile(r"(https?://[^\s]+)")
     video_links = [pat.findall(line)[0] for line in video_links]
+
+    # Remove duplicates while preserving order
+    video_links = list(dict.fromkeys(video_links))
     return video_links
 
 
@@ -134,7 +139,7 @@ def get_video_data(video_link: str) -> dict:
             "views": views,
             "like_rate": like_rate,
             "description": info.get("description", ""),
-            "duration": info.get("duration", 0) / 60,
+            "duration": round(info.get("duration", 0) / 60, 1),
             "published": published.strftime("%Y-%m-%d"),
             "created": datetime.now(tz=UTC).strftime("%Y-%m-%d"),
             "thumbnail": info.get("thumbnail", ""),
@@ -142,7 +147,7 @@ def get_video_data(video_link: str) -> dict:
     return video_data
 
 
-def enrich_video_data(video_data: dict, models: tuple) -> dict:
+def enrich_video_data(video_data: dict, models: tuple, logger: logging.Logger) -> dict:
     """Enrich video data with a summary and tags.
 
     Parameters
@@ -245,6 +250,7 @@ def save_note(video_data: dict) -> str:
 
 def main() -> None:
     """Main function."""
+    logger = get_logger()
     logger.info("🔮 Saving YT videos to Obsidian notes")
 
     logger.info("Getting video links")
@@ -269,7 +275,7 @@ def main() -> None:
             continue
 
         logger.info("| Enriching video data")
-        video_data = enrich_video_data(video_data, models)
+        video_data = enrich_video_data(video_data, models, logger)
 
         logger.info("| Saving note")
         note_path = save_note(video_data)
