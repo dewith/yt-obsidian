@@ -197,6 +197,7 @@ def enrich_video_data(video_data: dict, models: tuple, logger: logging.Logger) -
                 for i in range(5):
                     print(5 - i, end=" ", flush=True)
                     time.sleep(1)
+                print()
         else:
             video_data["new_transcript"] = transcript_text
 
@@ -220,6 +221,7 @@ def enrich_video_data(video_data: dict, models: tuple, logger: logging.Logger) -
         for i in range(10):
             print(10 - i, end=" ", flush=True)
             time.sleep(1)
+        print()
 
     return video_data
 
