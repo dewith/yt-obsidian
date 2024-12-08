@@ -281,6 +281,8 @@ def main() -> None:
         note_path = save_note(video_data)
         logger.info("| Saved note to %s", note_path)
 
+        time.sleep(5)
+
 
 if __name__ == "__main__":
     main()
