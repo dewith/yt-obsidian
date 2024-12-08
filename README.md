@@ -1,5 +1,7 @@
 # Save YT videos as Obsidian notes
+
 The process looks like this:
+
 1. Extract metadata of a YT video URL.
 2. Extract the transcript.
 3. Process the transcript with Gemini Flash to make more human-readable.
