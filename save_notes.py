@@ -147,7 +147,12 @@ def get_video_data(video_link: str) -> dict:
     return video_data
 
 
-def enrich_video_data(video_data: dict, models: tuple, logger: logging.Logger) -> dict:
+def enrich_video_data(
+    video_data: dict,
+    models: tuple,
+    logger: logging.Logger,
+    stop_if_llm_error: bool = True,
+) -> dict:
     """Enrich video data with a summary and tags.
 
     Parameters
@@ -164,6 +169,7 @@ def enrich_video_data(video_data: dict, models: tuple, logger: logging.Logger) -
     """
     transcript_model, summary_model = models
     max_minutes_for_transcript = 15
+    transcript = {}
     try:
         logger.info("| Getting transcript")
         transcript = YouTubeTranscriptApi.get_transcript(
@@ -171,12 +177,8 @@ def enrich_video_data(video_data: dict, models: tuple, logger: logging.Logger) -
         )
     except NoTranscriptFound:
         logger.error("Error getting transcript: No transcript found")
-        video_data["transcript"] = ""
-        video_data["new_transcript"] = ""
     except Exception as e:
         logger.error("Error getting transcript: %s", e)
-        video_data["transcript"] = ""
-        video_data["new_transcript"] = ""
 
     if transcript:
         transcript_text = "\n".join(
@@ -192,14 +194,11 @@ def enrich_video_data(video_data: dict, models: tuple, logger: logging.Logger) -
             except Exception as e:
                 logger.error("Error processing transcript: %s", e)
                 video_data["new_transcript"] = transcript_text
-
-                logger.info("Sleeping for 5 seconds")
-                for i in range(5):
-                    print(5 - i, end=" ", flush=True)
-                    time.sleep(1)
-                print()
         else:
             video_data["new_transcript"] = transcript_text
+    else:
+        video_data["transcript"] = ""
+        video_data["new_transcript"] = ""
 
     try:
         logger.info("| Generating summary and tags")
@@ -216,12 +215,8 @@ def enrich_video_data(video_data: dict, models: tuple, logger: logging.Logger) -
         video_data["summary"] = video_data["description"]
         video_data["key_takeaways"] = ""
         video_data["tags"] = []
-
-        logger.info("Sleeping for 10 seconds")
-        for i in range(10):
-            print(10 - i, end=" ", flush=True)
-            time.sleep(1)
-        print()
+        if stop_if_llm_error:
+            raise ValueError("Error to stop after LLM error") from e
 
     return video_data
 
