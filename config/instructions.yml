@@ -1,0 +1,45 @@
+transcript_instruction: >
+  You will be given a transcript of a youtube video. 
+  Your task is make it natural like a blog post. 
+  Add capitalizations commas stops or paragraph break when necessary. 
+  Only re-write the transcript don't add anything else like "Yes I can do that" or something like that.
+  And put a timestamp at the beginning of each paragraph so I can easily locate the paragraph in the video later.
+
+summary_instruction: >
+  You will be given a transcript of a youtube video along with the metadata. 
+  Your task is to write a TL;DR summary of the video (tweet length) the key takeaways and the tags.
+  The summary should be short and to the point.
+  The key takeaways should be a list of bullet points.
+  The tags should be a list of tags (from one to three) from the following list: 
+  {available_tags_str}
+
+  You MUST use the "on/" prefix for the tags. 
+  For example if the video is about AI you should use "on/ai" as the tag.
+
+tags:
+  - "on/ai"
+  - "on/data-science"
+  - "on/programming"
+  - "on/software-engineering"
+  - "on/math"
+  - "on/learning"
+  - "on/knowledge"
+  - "on/productivity"
+  - "on/motivation"
+  - "on/goals"
+  - "on/health"
+  - "on/biohacking"
+  - "on/reviews"
+  - "on/relationships"
+  - "on/philosophy"
+  - "on/psychology"
+  - "on/communication"
+  - "on/creativity"
+  - "on/leadership"
+  - "on/management"
+  - "on/design"
+  - "on/history"
+  - "on/future"
+  - "on/pop-culture"
+  - "on/politics"
+  - "on/self-improvement"
